@@ -27,6 +27,8 @@ impl Layer {
             .collect();
 
         let texture = Texture2D::from_rgba8(self.size.x as u16, self.size.y as u16, &pixels);
+        texture.set_filter(FilterMode::Nearest);
+
         let x = self.transform.translation.x;
         let y = self.transform.translation.y;
         let size = self.transform.matrix2 * vec2(self.size.x as f32, self.size.y as f32);
