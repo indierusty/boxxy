@@ -32,8 +32,9 @@ async fn main() {
         layer.scale(scale);
 
         if is_mouse_button_down(MouseButton::Left) {
-            let point = layer.screen_to_local(vec2(mouse_position().0, mouse_position().1));
-            layer.pixel(point);
+            let mouse_position = vec2(mouse_position().0, mouse_position().1);
+            let point = layer.screen_to_local(mouse_position);
+            layer.draw_pixel(point, RED);
         }
         layer.draw();
         next_frame().await;

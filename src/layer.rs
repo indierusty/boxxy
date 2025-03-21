@@ -45,24 +45,36 @@ impl Layer {
         );
     }
 
-    pub fn pixel(&mut self, pos: Vec2) {
-        let index = (pos.y as u32 * self.size.x) + pos.x as u32;
+    /// Sets pixel color at the given position. `pos` must be in the layer space coordinate.
+    pub fn draw_pixel(&mut self, pos: Vec2, color: Color) {
+        let pos = vec2(pos.x.floor(), pos.y.floor());
+        let size = vec2(self.size.x as f32, self.size.y as f32);
+
+        if pos.x < 0. || pos.x >= size.x || pos.y < 0. || pos.y >= size.y {
+            return;
+        }
+
+        let index = (pos.y * size.x) + pos.x;
         let index = index as usize;
+
         if index < self.pixels.len() {
-            self.pixels[index] = BLUE;
+            self.pixels[index] = color;
         }
     }
 }
 
 impl Layer {
+    /// Transform a point in screen space coordinate to layer space coordinate.
     pub fn screen_to_local(&self, point: Vec2) -> Vec2 {
         self.transform.matrix2.inverse() * (point - self.transform.translation)
     }
 
+    /// Adds translation to the layer.
     pub fn translate(&mut self, factor: Vec2) {
         self.transform.translation += factor;
     }
 
+    /// Scale the layer.
     pub fn scale(&mut self, factor: Vec2) {
         self.transform.matrix2 *= Mat2::from_scale_angle(factor, 0.);
     }
