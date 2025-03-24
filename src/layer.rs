@@ -2,6 +2,7 @@ use macroquad::prelude::*;
 
 pub struct Layer {
     pixels: Vec<Color>,
+    preview_pixels: Vec<Color>,
     size: UVec2,
     transform: Affine2,
 }
@@ -11,8 +12,11 @@ impl Layer {
         let length = (size.x * size.y) as usize;
         let mut pixels = Vec::with_capacity(length);
         pixels.resize(length, BLACK);
+        let preview_pixels = pixels.clone();
+
         Self {
             pixels,
+            preview_pixels,
             size,
             transform: Affine2::from_scale_angle_translation(vec2(10., 10.), 0., position),
         }
@@ -46,7 +50,7 @@ impl Layer {
     }
 
     /// Sets pixel color at the given position. `pos` must be in the layer space coordinate.
-    pub fn draw_pixel(&mut self, pos: Vec2, color: Color) {
+    pub fn draw_pixel(&mut self, pos: Vec2, color: Color, preview: bool) {
         let pos = vec2(pos.x.floor(), pos.y.floor());
         let size = vec2(self.size.x as f32, self.size.y as f32);
 
@@ -57,7 +61,9 @@ impl Layer {
         let index = (pos.y * size.x) + pos.x;
         let index = index as usize;
 
-        if index < self.pixels.len() {
+        if preview {
+            self.preview_pixels[index] = color;
+        } else {
             self.pixels[index] = color;
         }
     }

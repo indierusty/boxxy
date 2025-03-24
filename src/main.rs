@@ -1,11 +1,15 @@
 use macroquad::prelude::*;
 
+mod brush;
 mod layer;
+
+use brush::BrushTool;
 use layer::Layer;
 
 #[macroquad::main("Boxxy")]
 async fn main() {
     let mut layer = Layer::new(uvec2(50, 50), vec2(100., 50.));
+    let mut brush_tool = BrushTool::init();
 
     loop {
         clear_background(WHITE);
@@ -28,14 +32,11 @@ async fn main() {
             translation.y = 5.;
         };
 
+        brush_tool.update(&mut layer);
+
         layer.translate(translation);
         layer.scale(scale);
 
-        if is_mouse_button_down(MouseButton::Left) {
-            let mouse_position = vec2(mouse_position().0, mouse_position().1);
-            let point = layer.screen_to_local(mouse_position);
-            layer.draw_pixel(point, RED);
-        }
         layer.draw();
         next_frame().await;
     }
