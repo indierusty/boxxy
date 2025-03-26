@@ -2,14 +2,24 @@ use macroquad::prelude::*;
 
 mod brush;
 mod layer;
+mod rect;
 
 use brush::BrushTool;
 use layer::Layer;
+use rect::RectTool;
+
+pub enum Tool {
+    Rect,
+    Brush,
+}
 
 #[macroquad::main("Boxxy")]
 async fn main() {
-    let mut layer = Layer::new(uvec2(50, 50), vec2(100., 50.));
+    let mut layer = Layer::new(uvec2(300, 300), vec2(100., 50.));
+    let mut active_tool = Tool::Brush;
+
     let mut brush_tool = BrushTool::init();
+    let mut rect_tool = RectTool::new();
 
     loop {
         clear_background(WHITE);
@@ -32,7 +42,16 @@ async fn main() {
             translation.y = 5.;
         };
 
-        brush_tool.update(&mut layer);
+        if is_key_pressed(KeyCode::B) {
+            active_tool = Tool::Brush;
+        } else if is_key_pressed(KeyCode::R) {
+            active_tool = Tool::Rect;
+        }
+
+        match active_tool {
+            Tool::Rect => rect_tool.update(&mut layer),
+            Tool::Brush => brush_tool.update(&mut layer),
+        }
 
         layer.translate(translation);
         layer.scale(scale);

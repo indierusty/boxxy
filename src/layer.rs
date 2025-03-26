@@ -2,7 +2,7 @@ use macroquad::prelude::*;
 
 pub struct Layer {
     pixels: Vec<Color>,
-    preview_pixels: Vec<Color>,
+    preview_pixels: Vec<Option<Color>>,
     size: UVec2,
     transform: Affine2,
 }
@@ -10,9 +10,12 @@ pub struct Layer {
 impl Layer {
     pub fn new(size: UVec2, position: Vec2) -> Self {
         let length = (size.x * size.y) as usize;
+
         let mut pixels = Vec::with_capacity(length);
         pixels.resize(length, BLACK);
-        let preview_pixels = pixels.clone();
+
+        let mut preview_pixels = Vec::with_capacity(length);
+        preview_pixels.resize(length, None);
 
         Self {
             pixels,
@@ -26,8 +29,8 @@ impl Layer {
         let pixels: Vec<u8> = self
             .pixels
             .iter()
-            .flat_map(|c| [c.r, c.g, c.b, c.a])
-            .map(|v| (v * 255.) as u8)
+            .zip(self.preview_pixels.iter())
+            .flat_map(|(a, b)| Into::<[u8; 4]>::into(b.unwrap_or(*a)))
             .collect();
 
         let texture = Texture2D::from_rgba8(self.size.x as u16, self.size.y as u16, &pixels);
@@ -50,21 +53,48 @@ impl Layer {
     }
 
     /// Sets pixel color at the given position. `pos` must be in the layer space coordinate.
-    pub fn draw_pixel(&mut self, pos: Vec2, color: Color, preview: bool) {
-        let pos = vec2(pos.x.floor(), pos.y.floor());
+    pub fn draw_pixel(&mut self, x: f32, y: f32, color: Color, preview: bool) {
+        let (x, y) = (x.floor(), y.floor());
         let size = vec2(self.size.x as f32, self.size.y as f32);
 
-        if pos.x < 0. || pos.x >= size.x || pos.y < 0. || pos.y >= size.y {
+        if x < 0. || x >= size.x || y < 0. || y >= size.y {
             return;
         }
 
-        let index = (pos.y * size.x) + pos.x;
+        let index = (y * size.x) + x;
         let index = index as usize;
 
         if preview {
-            self.preview_pixels[index] = color;
+            self.preview_pixels[index] = Some(color);
         } else {
             self.pixels[index] = color;
+        }
+    }
+
+    pub fn draw_rect(&mut self, x: f32, y: f32, w: f32, h: f32, color: Color, preview: bool) {
+        let mut xi = x;
+        let mut yi = y;
+        let ex = x + w;
+        let ey = y + h;
+
+        while xi <= ex {
+            self.draw_pixel(xi, yi, color, preview);
+            self.draw_pixel(xi, ey, color, preview);
+            xi += 1.;
+        }
+
+        xi = x;
+        yi = y;
+        while yi <= ey {
+            self.draw_pixel(xi, yi, color, preview);
+            self.draw_pixel(ex, yi, color, preview);
+            yi += 1.;
+        }
+    }
+
+    pub fn clear_preview(&mut self) {
+        for i in 0..self.preview_pixels.len() {
+            self.preview_pixels[i] = None;
         }
     }
 }
